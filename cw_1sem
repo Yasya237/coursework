@@ -1,0 +1,138 @@
+# Всі відповіді мають бути змінними відповідного типу. (print не потрібен, тільки для себе на етапі розробки коду)
+# Данні з файлу мають бути прочитані один раз!!!
+# Для кожного завдання зробити окрему функцію (можна використовувати в одній функції результати роботи іншої)
+# Завдання:
+
+# 1) Підрахувати за який період в вас статистика (для всіх юзерів). У відповіді вказати дату початку і дату кінця.
+# Відповідь - list[str] з двома строками(дата початку і дата кінця)
+# Приклад: ["01/01/2023", "01/01/2025"]
+
+
+def read_users(filename: str) -> list[str]:
+    with open(filename, 'r') as file:
+        return file.readlines()
+
+def calculate_period(lines: list[str]) -> list[str]:
+
+    from datetime import datetime
+
+    min_date = None
+    max_date = None
+
+    for line in lines:
+        date_str = line.split("date_connected: ")[1].split(",")[0]
+        current_date = datetime.strptime(date_str, "%d/%m/%Y %H:%M")
+
+        if min_date is None or current_date < min_date:
+            min_date = current_date
+        if max_date is None or current_date > max_date:
+            max_date = current_date
+
+    return [min_date.strftime("%d/%m/%Y"), max_date.strftime("%d/%m/%Y")]
+
+########################################################################################################################
+
+# 2) Підрахувати кількість унікальних юзерів, які заходили на сайт протягом цього періоду.
+# Відповідь - int.
+# Приклад: 30
+
+def count_unique_users(lines: list[str]) -> int:
+
+    unique_users = set()
+
+    for line in lines:
+        username = line.split("username: ")[1].split(",")[0]
+        unique_users.add(username)
+
+    return len(unique_users)
+########################################################################################################################
+
+#3) Підрахувати кількість підключень для одного юзера.
+# Відповідь - dict у форматі {username(str): connection_count(int)}
+# Приклад - {"user1": 2, "user2": 13, ...}
+
+def connection_count(lines: list[str]) -> dict:
+
+    my_dict = {}
+
+    for line in lines:
+        username = line.split("username: ")[1].split(",")[0]
+
+        if username in my_dict:
+            my_dict[username] += 1
+        else:
+            my_dict[username] = 1
+
+    return my_dict
+########################################################################################################################
+
+#4) Знайти унікальні IP для одного юзера.
+# Відповідь - dict у форматі {ключ(str): значення(list[str])} - {username: [unique_ip_1, unique_ip_2, ...]}
+# Приклад - {"user1": ["72.207.122.111", "164.123.195.245"], "user2": ["96.213.160.12", ...], ...}
+
+def unique_ip(lines: list[str]) -> dict:
+
+    ip_dict = {}
+
+    for line in lines:
+        username = line.split("username: ")[1].split(",")[0].strip()
+        ip = line.split("ip: ")[1].split(",")[0].strip()
+
+        if username not in ip_dict:
+            ip_dict[username] = []
+        if ip not in ip_dict[username]:
+            ip_dict[username].append(ip)
+
+    return ip_dict
+########################################################################################################################
+
+#5) Підрахувати кількість унікальних IP для одного юзера.
+# Відповідь - dict у форматі {username(str): unique_ip_count(int)}
+# Приклад - {"user1": 1, "user2": 7, ...}
+
+def count_unique_ip(lines: list[str]) -> dict:
+
+    ip_dict = {}
+
+    for line in lines:
+        username = line.split("username: ")[1].split(",")[0].strip()
+        ip = line.split("ip: ")[1].split(",")[0].strip()
+
+        if username not in ip_dict:
+            ip_dict[username] = set()
+
+        ip_dict[username].add(ip)
+
+    return {username: len(ips) for username, ips in ip_dict.items()}
+########################################################################################################################
+
+#Не дозволяється використовувати бібліотеку datetime (створити власні функції для підрахунку)!!!
+# 6**) Підрахувати загальний час підключення для одного юзера у секундах.
+# Відповідь - dict у форматі {username(str): duration_time(int)}
+# Приклад - {"user1": 12345, "user2": 67890, ...}
+
+def users_seconds(lines: list[str]) -> dict:
+
+    user_durations = {}
+
+    for line in lines:
+        username = line.split("username: ")[1].split(",")[0].strip()
+        time = line.split("connection_duration: ")[1].strip()
+        hours, minutes, seconds = map(int, time.split(":"))
+        duration_time = hours*3600+minutes*60+seconds
+
+        if username not in user_durations:
+            user_durations[username] = 0
+
+        user_durations[username] += duration_time
+
+    return user_durations
+
+filename = "test_logs.txt"
+lines = read_users(filename)
+result = calculate_period(lines)
+unique_user_count = count_unique_users(lines)
+connection_counts = connection_count(lines)
+unique_ips = unique_ip(lines)
+unique_ip_counts = count_unique_ip(lines)
+total_connection_time = users_seconds(lines)
